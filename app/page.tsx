@@ -721,7 +721,7 @@ export default function HomePage() {
               貴社のプロダクト成功に貢献します。
             </motion.p>
             <motion.a 
-              href="mailto:contact@example.com" 
+              href="mailto:xzengbu@gmail.com" 
               className="btn btn-primary"
               style={{ marginTop: '2rem' }}
               initial={{ opacity: 0, y: 20 }}
