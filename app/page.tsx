@@ -17,7 +17,7 @@ const stagger = {
 };
 
 // カウントアップコンポーネント
-function CountUp({ end, suffix = '' }: { end: number; suffix?: string }) {
+function CountUp({ end, suffix = '', decimals = 0 }: { end: number; suffix?: string; decimals?: number }) {
   const [count, setCount] = useState(0);
   const ref = useRef<HTMLDivElement>(null);
   const isInView = useInView(ref, { once: true, amount: 0.5 });
@@ -33,15 +33,15 @@ function CountUp({ end, suffix = '' }: { end: number; suffix?: string }) {
         setCount(end);
         clearInterval(timer);
       } else {
-        setCount(Math.floor(start));
+        setCount(decimals > 0 ? parseFloat(start.toFixed(decimals)) : Math.floor(start));
       }
     }, 16);
     return () => clearInterval(timer);
-  }, [isInView, end]);
+  }, [isInView, end, decimals]);
 
   return (
     <div ref={ref} className="stat-v">
-      {count}
+      {decimals > 0 ? count.toFixed(decimals) : count}
       {suffix}
     </div>
   );
@@ -81,10 +81,10 @@ export default function Page() {
       <header className="nav">
         <div className="container nav-inner">
           <a href="#top" className="brand">
-            rancorder
+            H・M
           </a>
           <nav className="nav-links">
-            <a href="#why">Why PM</a>
+            <a href="#role">Role Definition</a>
             <a href="#projects">Projects</a>
             <a href="#skills">Skills</a>
             <a href="#contact" className="pill">
@@ -94,84 +94,145 @@ export default function Page() {
         </div>
       </header>
 
-      {/* Hero */}
+      {/* Hero - EY想定版：役割定義ブロック */}
       <section id="top" className="hero">
         <div className="container">
           <motion.div initial="hidden" animate="visible" variants={stagger}>
             <motion.p className="kicker" variants={fadeUp}>
-              H・M
+              Enterprise Technical Project Manager
             </motion.p>
 
             <motion.h1 className="hero-title" variants={fadeUp}>
-              エンタープライズB2Bで、要件を"壊さず前に進める"Technical PM
+              I help enterprise B2B teams move from PoC to stable production
             </motion.h1>
 
-            <motion.p className="hero-sub" variants={fadeUp}>
-              要件定義・品質設計・運用判断を17年。実装と本番運用まで見通して意思決定します。
-            </motion.p>
+            <motion.div className="role-definition" variants={fadeUp}>
+              <div className="role-item">
+                <div className="role-label">What I solve</div>
+                <div className="role-value">
+                  Projects that are technically complete but cannot move to production due to ambiguous requirements,
+                  quality disputes, or operational risks
+                </div>
+              </div>
+              <div className="role-item">
+                <div className="role-label">What makes me different</div>
+                <div className="role-value">
+                  Not project tracking, but decision design that prevents projects from stalling after development is
+                  technically complete
+                </div>
+              </div>
+              <div className="role-item">
+                <div className="role-label">Scope of responsibility</div>
+                <div className="role-value">From requirement ambiguity through production operation</div>
+              </div>
+            </motion.div>
 
             <motion.p className="hero-desc" variants={fadeUp}>
-              曖昧な要件、複雑なステークホルダー、失敗コストの高い制約下でも、
-              優先順位とトレードオフを設計し、プロジェクトを前に進めてきました。
-              <br />
-              製造業の精度（0.01mm、失敗コスト制約）× テクノロジーの速度（24/7運用）を両立できる希少人材です。
+              17 years of enterprise PM experience in manufacturing (precision: 0.01mm, failure cost constraints) ×
+              Technology delivery (24/7 operations). I design trade-offs and move projects forward under ambiguous
+              requirements, complex stakeholders, and high failure costs.
             </motion.p>
 
             <motion.div className="cta" variants={fadeUp}>
               <a className="btn primary pulse" href="mailto:xzengbu@gmail.com">
-                面談・相談する
+                Schedule Conversation
               </a>
               <a className="btn ghost" href="#projects">
-                代表実績を見る →
+                View Representative Projects →
               </a>
               <a className="btn ghost" href="https://github.com/rancorder" target="_blank" rel="noreferrer">
                 GitHub
               </a>
             </motion.div>
 
+            {/* Operational Highlights - 運用実績を最前列化 */}
+            <motion.div className="operational-highlights" variants={fadeUp}>
+              <div className="op-header">Operational Highlights</div>
+              <div className="stats-operational">
+                <motion.div className="stat-op" whileHover={{ y: -4, transition: { duration: 0.2 } }}>
+                  <CountUp end={99.7} suffix="%" decimals={1} />
+                  <div className="stat-l">Uptime (19+ days continuous monitoring)</div>
+                </motion.div>
+                <motion.div className="stat-op" whileHover={{ y: -4, transition: { duration: 0.2 } }}>
+                  <CountUp end={45} suffix="+ days" />
+                  <div className="stat-l">Single-site production jobs (no interruption)</div>
+                </motion.div>
+                <motion.div className="stat-op" whileHover={{ y: -4, transition: { duration: 0.2 } }}>
+                  <div className="stat-v">Circuit Breakers</div>
+                  <div className="stat-l">Designed with failure isolation</div>
+                </motion.div>
+              </div>
+            </motion.div>
+
+            {/* Traditional Stats */}
             <motion.div className="stats" variants={fadeUp}>
               <motion.div className="stat" whileHover={{ y: -4, transition: { duration: 0.2 } }}>
-                <CountUp end={17} suffix="年" />
-                <div className="stat-l">エンタープライズPM経験</div>
+                <CountUp end={17} suffix=" years" />
+                <div className="stat-l">Enterprise PM Experience</div>
               </motion.div>
               <motion.div className="stat" whileHover={{ y: -4, transition: { duration: 0.2 } }}>
-                <CountUp end={21} suffix="品番" />
-                <div className="stat-l">同時立上げ（最大規模）</div>
+                <CountUp end={21} suffix=" SKUs" />
+                <div className="stat-l">Simultaneous Launch (max scale)</div>
               </motion.div>
               <motion.div className="stat" whileHover={{ y: -4, transition: { duration: 0.2 } }}>
-                <CountUp end={11} suffix="ヶ月" />
-                <div className="stat-l">24/7本番運用（連続稼働）</div>
+                <CountUp end={11} suffix=" months" />
+                <div className="stat-l">24/7 Production Operation</div>
               </motion.div>
             </motion.div>
           </motion.div>
         </div>
       </section>
 
-      {/* Why PM */}
-      <section id="why" className="section">
+      {/* Role Clarification - やらないこと明示 + PM誤解防止 */}
+      <section id="role" className="section">
         <div className="container">
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.2 }} variants={stagger}>
             <motion.h2 className="section-title" variants={fadeUp}>
-              Why Product Manager
+              What I intentionally do NOT optimize for
             </motion.h2>
             <motion.p className="section-sub" variants={fadeUp}>
-              技術だけでは前に進まない領域を、意思決定で通す
+              Clarity on boundaries = Trust in execution
             </motion.p>
 
-            <motion.div className="card why" variants={fadeUp}>
-              <p>
-                技術だけでは、プロダクトは前に進みません。要件・品質・運用の「間」で、
-                何を採り、何を捨てるかを決める役割が必要です。
-              </p>
-              <p>
-                私は17年間、失敗コストの高いエンタープライズ案件で、
-                要件定義・合意形成・品質設計を担い、進め切る意思決定をしてきました。
-                その経験をテクノロジー領域のPMとして提供します。
-              </p>
-              <p>
-                製造業で培った「0.01mmの精度」と「失敗が許されない制約」の中での判断力を、
-                テクノロジーの「24/7運用」と「高速な変更」に適用できる希少性が私の武器です。
-              </p>
+            <motion.div className="not-optimize-grid" variants={stagger}>
+              <motion.div className="card" variants={fadeUp}>
+                <div className="mini-title">Micromanaging task boards</div>
+                <p className="muted">
+                  I manage projects primarily through decision clarity and ownership design, not through excessive
+                  tooling. Tools are introduced only when they reduce cognitive load.
+                </p>
+              </motion.div>
+
+              <motion.div className="card" variants={fadeUp}>
+                <div className="mini-title">Velocity-only delivery without operational ownership</div>
+                <p className="muted">
+                  I take responsibility from requirement ambiguity through production operation. Delivery speed means
+                  nothing if systems cannot run in production.
+                </p>
+              </motion.div>
+
+              <motion.div className="card" variants={fadeUp}>
+                <div className="mini-title">PoCs with no clear production intent</div>
+                <p className="muted">
+                  Every technical decision is made with production operation in mind. PoCs without operational
+                  feasibility design waste resources.
+                </p>
+              </motion.div>
+            </motion.div>
+
+            <motion.div className="pm-clarification" variants={fadeUp}>
+              <div className="pm-clarification-inner">
+                <div className="pm-icon">💡</div>
+                <div>
+                  <div className="pm-clarification-title">My PM Approach</div>
+                  <p className="pm-clarification-text">
+                    I manage projects primarily through decision clarity and ownership design, not through excessive
+                    tooling. Tools (JIRA, Asana, etc.) are introduced only when they reduce cognitive load. My value is
+                    in designing decisions that prevent projects from stalling after development is technically
+                    complete.
+                  </p>
+                </div>
+              </div>
             </motion.div>
           </motion.div>
         </div>
@@ -182,46 +243,44 @@ export default function Page() {
         <div className="container">
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.2 }} variants={stagger}>
             <motion.h2 className="section-title" variants={fadeUp}>
-              代表実績（意思決定と運用）
+              Representative Projects
             </motion.h2>
             <motion.p className="section-sub" variants={fadeUp}>
-              要件・品質・運用のトレードオフをどう捌いたか
+              Context → Structural Problem → Decision Design → Production Result
             </motion.p>
 
             <motion.div className="filters" variants={fadeUp}>
-              {categories.map((c) => (
-                <motion.button
-                  key={c.key}
-                  className={`chip ${activeCategory === c.key ? 'active' : ''}`}
-                  onClick={() => setActiveCategory(c.key)}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.98 }}
+              {categories.map((cat) => (
+                <button
+                  key={cat.key}
+                  className={`chip ${activeCategory === cat.key ? 'active' : ''}`}
+                  onClick={() => setActiveCategory(cat.key)}
                 >
-                  {c.label}
-                </motion.button>
+                  {cat.label}
+                </button>
               ))}
             </motion.div>
 
             <AnimatePresence mode="wait">
               <motion.div
                 key={activeCategory}
-                className="grid"
                 initial="hidden"
                 animate="visible"
                 exit="hidden"
                 variants={stagger}
+                className="grid"
               >
                 {filtered.map((p) => (
                   <motion.article
                     key={p.id}
-                    className="card project"
+                    className="card"
                     variants={fadeUp}
+                    layout
                     whileHover={{
                       y: -8,
-                      boxShadow: '0 24px 80px rgba(0, 0, 0, 0.5)',
-                      borderColor: 'rgba(255, 255, 255, 0.22)',
+                      boxShadow: '0 24px 60px rgba(0, 0, 0, 0.5)',
                     }}
-                    transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+                    transition={{ duration: 0.3 }}
                   >
                     <div className="project-head">
                       <h3 className="project-title">{p.title}</h3>
@@ -230,9 +289,9 @@ export default function Page() {
 
                     <p className="project-desc">{p.description}</p>
 
-                    {p.pmDecisions?.length ? (
+                    {p.pmDecisions && p.pmDecisions.length > 0 ? (
                       <div className="pm-box">
-                        <div className="pm-title">PMとしての判断</div>
+                        <div className="pm-title">Decision Design</div>
                         <ul className="pm-list">
                           {p.pmDecisions.map((d, idx) => (
                             <li key={idx}>{d}</li>
@@ -243,7 +302,7 @@ export default function Page() {
 
                     <div className="two-col">
                       <div>
-                        <div className="mini-title">成果</div>
+                        <div className="mini-title">Production Result</div>
                         <ul className="list">
                           {p.highlights.map((h, idx) => (
                             <li key={idx}>{h}</li>
@@ -269,7 +328,7 @@ export default function Page() {
         </div>
       </section>
 
-      {/* Skills */}
+      {/* Skills - "Used for" 形式 */}
       <section id="skills" className="section">
         <div className="container">
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.2 }} variants={stagger}>
@@ -277,7 +336,7 @@ export default function Page() {
               Skills
             </motion.h2>
             <motion.p className="section-sub" variants={fadeUp}>
-              「できること」より「どう判断するか」を中心に
+              Not "what I can do" but "how I use them to solve problems"
             </motion.p>
 
             <motion.div className="grid skills" variants={stagger}>
@@ -305,24 +364,23 @@ export default function Page() {
         </div>
       </section>
 
-      {/* Contact */}
+      {/* Contact - EY向けCTA */}
       <section id="contact" className="section">
         <div className="container">
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.2 }} variants={stagger}>
             <motion.h2 className="section-title" variants={fadeUp}>
-              詰まりやすい案件を、前に進めます
+              If your project is technically complete but cannot move to production
             </motion.h2>
             <motion.p className="section-sub" variants={fadeUp}>
-              要件が曖昧 / 品質で揉める / 運用が怖い —— その詰まりを整理して意思決定します
+              I'm happy to have a conversation
             </motion.p>
 
             <motion.div className="contact-card" variants={fadeUp}>
               <div className="contact-left">
                 <div className="mini-title">Contact</div>
                 <p className="muted">
-                  案件の状況（ざっくりでOK）を添えてもらえると、話が早いです。
-                  <br />
-                  製造業PM × Tech PMの両面から、最適な進め方を提案します。
+                  Brief context about your project helps — I can propose the best approach from both manufacturing PM
+                  and technical PM perspectives.
                 </p>
               </div>
               <div className="contact-right">
@@ -330,7 +388,7 @@ export default function Page() {
                   xzengbu@gmail.com
                 </a>
                 <a className="btn ghost" href="https://github.com/rancorder" target="_blank" rel="noreferrer">
-                  GitHubを見る
+                  GitHub
                 </a>
               </div>
             </motion.div>
@@ -340,7 +398,7 @@ export default function Page() {
 
       <footer className="footer">
         <div className="container footer-inner">
-          <span className="muted">© {new Date().getFullYear()} rancorder</span>
+          <span className="muted">© {new Date().getFullYear()} H・M</span>
         </div>
       </footer>
 
@@ -508,6 +566,78 @@ export default function Page() {
           max-width: 900px;
         }
 
+        /* 🆕 Role Definition Block */
+        .role-definition {
+          margin: 32px 0;
+          padding: 28px;
+          border: 1px solid var(--border);
+          background: var(--panel);
+          border-radius: 20px;
+        }
+
+        .role-item {
+          margin-bottom: 20px;
+        }
+
+        .role-item:last-child {
+          margin-bottom: 0;
+        }
+
+        .role-label {
+          font-weight: 900;
+          font-size: 12px;
+          color: var(--accent);
+          text-transform: uppercase;
+          letter-spacing: 0.8px;
+          margin-bottom: 8px;
+        }
+
+        .role-value {
+          font-size: 14px;
+          color: var(--muted);
+          line-height: 1.75;
+        }
+
+        /* 🆕 Operational Highlights */
+        .operational-highlights {
+          margin-top: 40px;
+          padding: 32px;
+          border: 2px solid rgba(124, 58, 237, 0.4);
+          background: rgba(124, 58, 237, 0.08);
+          border-radius: 20px;
+        }
+
+        .op-header {
+          font-weight: 900;
+          font-size: 14px;
+          color: var(--accent);
+          text-transform: uppercase;
+          letter-spacing: 1px;
+          margin-bottom: 20px;
+          text-align: center;
+        }
+
+        .stats-operational {
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 16px;
+        }
+
+        .stat-op {
+          border: 1px solid var(--border);
+          background: var(--panel);
+          border-radius: 18px;
+          padding: 24px;
+          transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+          cursor: pointer;
+          text-align: center;
+        }
+
+        .stat-op:hover {
+          background: rgba(255, 255, 255, 0.08);
+          border-color: rgba(255, 255, 255, 0.22);
+        }
+
         .cta {
           display: flex;
           gap: 12px;
@@ -633,6 +763,48 @@ export default function Page() {
           padding: 32px;
           transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
           will-change: transform;
+        }
+
+        /* 🆕 Not Optimize Grid */
+        .not-optimize-grid {
+          margin-top: 32px;
+          display: grid;
+          gap: 24px;
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+
+        /* 🆕 PM Clarification Box */
+        .pm-clarification {
+          margin-top: 40px;
+          padding: 32px;
+          border: 1px solid rgba(34, 197, 94, 0.3);
+          background: rgba(34, 197, 94, 0.06);
+          border-radius: 20px;
+        }
+
+        .pm-clarification-inner {
+          display: flex;
+          gap: 20px;
+          align-items: flex-start;
+        }
+
+        .pm-icon {
+          font-size: 32px;
+          flex-shrink: 0;
+        }
+
+        .pm-clarification-title {
+          font-weight: 900;
+          font-size: 16px;
+          margin-bottom: 12px;
+          color: var(--accent2);
+        }
+
+        .pm-clarification-text {
+          margin: 0;
+          color: var(--muted);
+          line-height: 1.75;
+          font-size: 14px;
         }
 
         .filters {
@@ -811,16 +983,6 @@ export default function Page() {
           border-color: rgba(255, 255, 255, 0.18);
         }
 
-        .why p {
-          margin: 0 0 16px;
-          color: var(--muted);
-          line-height: 1.85;
-        }
-
-        .why p:last-child {
-          margin-bottom: 0;
-        }
-
         .grid.skills {
           grid-template-columns: repeat(3, minmax(0, 1fr));
         }
@@ -865,10 +1027,16 @@ export default function Page() {
           .stats {
             grid-template-columns: 1fr;
           }
+          .stats-operational {
+            grid-template-columns: 1fr;
+          }
           .grid {
             grid-template-columns: 1fr;
           }
           .grid.skills {
+            grid-template-columns: 1fr;
+          }
+          .not-optimize-grid {
             grid-template-columns: 1fr;
           }
           .two-col {
