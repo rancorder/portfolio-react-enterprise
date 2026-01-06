@@ -52,6 +52,9 @@ export const projects: Project[] = [
       'Localized failure impact scope in architecture to control failure costs',
       'Defined quality baseline as "tolerate false negatives, minimize false positives" rather than "perfect detection"',
     ],
+    links: {
+      github: 'https://github.com/rancorder/master_controller',
+    },
   },
 
   // Case 3: Multi-stakeholder Enterprise Project (Decision Deadlock Resolution)
@@ -130,6 +133,9 @@ export const projects: Project[] = [
       'Created fault injection to design for "failure assumption," validating recovery procedures and impact scope',
       'Classified monitoring metrics into 3 tiers (Immediate Response/Next-day Check/Record Only)',
     ],
+    links: {
+      github: 'https://github.com/rancorder/sre-demo-system',
+    },
   },
 
   // Additional: Quality Improvement (pytest introduction)
