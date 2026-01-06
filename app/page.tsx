@@ -1,10 +1,7 @@
 'use client';
 
-import { useMemo, useState, useEffect, useRef } from 'react';
-import { motion, useScroll, useTransform, useSpring, useInView, AnimatePresence } from 'framer-motion';
-import { projects } from '@/data/projects';
-import { skills } from '@/data/skills';
-import type { ProjectCategory } from '@/types';
+import { useState, useEffect, useRef } from 'react';
+import { motion, useScroll, useTransform, useSpring, useInView } from 'framer-motion';
 
 const fadeUp = {
   hidden: { opacity: 0, y: 24 },
@@ -48,24 +45,10 @@ function CountUp({ end, suffix = '', decimals = 0 }: { end: number; suffix?: str
 }
 
 export default function Page() {
-  const [activeCategory, setActiveCategory] = useState<ProjectCategory>('all');
   const { scrollYProgress } = useScroll();
   
   const yPosAnim = useSpring(scrollYProgress, { stiffness: 100, damping: 30 });
   const bgY = useTransform(yPosAnim, [0, 1], ['15%', '25%']);
-
-  const categories: { key: ProjectCategory; label: string }[] = [
-    { key: 'all', label: 'All' },
-    { key: 'enterprise', label: 'Enterprise PM' },
-    { key: 'product', label: 'Product' },
-    { key: 'infrastructure', label: 'Infra/SRE' },
-    { key: 'technical', label: 'Technical' },
-  ];
-
-  const filtered = useMemo(() => {
-    if (activeCategory === 'all') return projects;
-    return projects.filter((p) => p.category === activeCategory);
-  }, [activeCategory]);
 
   return (
     <main>
@@ -94,7 +77,7 @@ export default function Page() {
         </div>
       </header>
 
-      {/* Hero - EY想定版：役割定義ブロック */}
+      {/* Hero - EY想定版：判断設計に寄せ切る */}
       <section id="top" className="hero">
         <div className="container">
           <motion.div initial="hidden" animate="visible" variants={stagger}>
@@ -103,34 +86,12 @@ export default function Page() {
             </motion.p>
 
             <motion.h1 className="hero-title" variants={fadeUp}>
-              I help enterprise B2B teams move from PoC to stable production
+              I help enterprise teams operationalize technology by clarifying decision points and removing blockers
+              between PoC and stable production
             </motion.h1>
 
-            <motion.div className="role-definition" variants={fadeUp}>
-              <div className="role-item">
-                <div className="role-label">What I solve</div>
-                <div className="role-value">
-                  Projects that are technically complete but cannot move to production due to ambiguous requirements,
-                  quality disputes, or operational risks
-                </div>
-              </div>
-              <div className="role-item">
-                <div className="role-label">What makes me different</div>
-                <div className="role-value">
-                  Not project tracking, but decision design that prevents projects from stalling after development is
-                  technically complete
-                </div>
-              </div>
-              <div className="role-item">
-                <div className="role-label">Scope of responsibility</div>
-                <div className="role-value">From requirement ambiguity through production operation</div>
-              </div>
-            </motion.div>
-
-            <motion.p className="hero-desc" variants={fadeUp}>
-              17 years of enterprise PM experience in manufacturing (precision: 0.01mm, failure cost constraints) ×
-              Technology delivery (24/7 operations). I design trade-offs and move projects forward under ambiguous
-              requirements, complex stakeholders, and high failure costs.
+            <motion.p className="hero-subtitle" variants={fadeUp}>
+              From ambiguous requirements to stable production ownership.
             </motion.p>
 
             <motion.div className="cta" variants={fadeUp}>
@@ -145,21 +106,21 @@ export default function Page() {
               </a>
             </motion.div>
 
-            {/* Operational Highlights - 運用実績を最前列化 */}
+            {/* Operational Highlights - 前面独立表示 */}
             <motion.div className="operational-highlights" variants={fadeUp}>
               <div className="op-header">Operational Highlights</div>
               <div className="stats-operational">
                 <motion.div className="stat-op" whileHover={{ y: -4, transition: { duration: 0.2 } }}>
-                  <CountUp end={99.7} suffix="%" decimals={1} />
-                  <div className="stat-l">Uptime (19+ days continuous monitoring)</div>
+                  <div className="stat-v">19+ days</div>
+                  <div className="stat-l">Integrated automation controller running continuously</div>
                 </motion.div>
                 <motion.div className="stat-op" whileHover={{ y: -4, transition: { duration: 0.2 } }}>
-                  <CountUp end={45} suffix="+ days" />
-                  <div className="stat-l">Single-site production jobs (no interruption)</div>
+                  <div className="stat-v">50+ modules</div>
+                  <div className="stat-l">Orchestrated with zero manual intervention</div>
                 </motion.div>
                 <motion.div className="stat-op" whileHover={{ y: -4, transition: { duration: 0.2 } }}>
-                  <div className="stat-v">Circuit Breakers</div>
-                  <div className="stat-l">Designed with failure isolation</div>
+                  <div className="stat-v">Production</div>
+                  <div className="stat-l">Failure isolation and circuit breaker design</div>
                 </motion.div>
               </div>
             </motion.div>
@@ -238,7 +199,7 @@ export default function Page() {
         </div>
       </section>
 
-      {/* Projects */}
+      {/* Projects - 代表3件のみ（Problem/Action/Result型） */}
       <section id="projects" className="section">
         <div className="container">
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.2 }} variants={stagger}>
@@ -246,123 +207,168 @@ export default function Page() {
               Representative Projects
             </motion.h2>
             <motion.p className="section-sub" variants={fadeUp}>
-              Context → Structural Problem → Decision Design → Production Result
+              Problem → Action → Result
             </motion.p>
 
-            <motion.div className="filters" variants={fadeUp}>
-              {categories.map((cat) => (
-                <button
-                  key={cat.key}
-                  className={`chip ${activeCategory === cat.key ? 'active' : ''}`}
-                  onClick={() => setActiveCategory(cat.key)}
-                >
-                  {cat.label}
-                </button>
-              ))}
-            </motion.div>
-
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={activeCategory}
-                initial="hidden"
-                animate="visible"
-                exit="hidden"
-                variants={stagger}
-                className="grid"
+            <motion.div className="grid" variants={stagger}>
+              {/* Case 1: Manufacturing B2B */}
+              <motion.article
+                className="card"
+                variants={fadeUp}
+                whileHover={{
+                  y: -8,
+                  boxShadow: '0 24px 60px rgba(0, 0, 0, 0.5)',
+                }}
+                transition={{ duration: 0.3 }}
               >
-                {filtered.map((p) => (
-                  <motion.article
-                    key={p.id}
-                    className="card"
-                    variants={fadeUp}
-                    layout
-                    whileHover={{
-                      y: -8,
-                      boxShadow: '0 24px 60px rgba(0, 0, 0, 0.5)',
-                    }}
-                    transition={{ duration: 0.3 }}
+                <div className="project-head">
+                  <h3 className="project-title">Manufacturing B2B System (21 SKUs, Simultaneous Launch)</h3>
+                  <span className="badge">enterprise</span>
+                </div>
+
+                <div className="case-block">
+                  <div className="case-label">Problem</div>
+                  <p className="case-text">
+                    21-product simultaneous launch stalled by conflicting stakeholder requirements across 5 companies.
+                    Specification changes threatened delivery deadlines and escalating costs.
+                  </p>
+                </div>
+
+                <div className="case-block">
+                  <div className="case-label">Action</div>
+                  <p className="case-text">
+                    Designed 3-tier quality baseline (Required/Recommended/Ideal) to localize change impact. Unified
+                    stakeholder coordination through single decision window, accelerating approvals by 3x.
+                  </p>
+                </div>
+
+                <div className="case-block">
+                  <div className="case-label">Result</div>
+                  <ul className="list">
+                    <li>100% on-time delivery rate maintained for 17 months (zero delays)</li>
+                    <li>30% reduction in specification change requests</li>
+                    <li>Largest-scale project in 17-year career</li>
+                  </ul>
+                </div>
+
+                <div className="tags">
+                  <span className="tag">Requirement Definition</span>
+                  <span className="tag">Stakeholder Coordination</span>
+                  <span className="tag">Risk Management</span>
+                </div>
+              </motion.article>
+
+              {/* Case 2: Automation Platform */}
+              <motion.article
+                className="card"
+                variants={fadeUp}
+                whileHover={{
+                  y: -8,
+                  boxShadow: '0 24px 60px rgba(0, 0, 0, 0.5)',
+                }}
+                transition={{ duration: 0.3 }}
+              >
+                <div className="project-head">
+                  <h3 className="project-title">Automation Platform (54 Sites, 24/7 Operation for 11 Months)</h3>
+                  <span className="badge">product</span>
+                </div>
+
+                <div className="case-block">
+                  <div className="case-label">Problem</div>
+                  <p className="case-text">
+                    Manual monitoring of 54 e-commerce sites consuming 1,000+ hours annually. PoC implementations
+                    historically failed to reach production due to operational complexity.
+                  </p>
+                </div>
+
+                <div className="case-block">
+                  <div className="case-label">Action</div>
+                  <p className="case-text">
+                    Designed for failure isolation from day one using SQLite WAL for recovery speed. Prioritized
+                    operational simplicity over architectural elegance. Defined quality baseline as "tolerate false
+                    negatives, minimize false positives."
+                  </p>
+                </div>
+
+                <div className="case-block">
+                  <div className="case-label">Result</div>
+                  <ul className="list">
+                    <li>99.8% uptime over 11 months continuous operation</li>
+                    <li>1,000+ hours annual labor reduction (¥720K monthly equivalent)</li>
+                    <li>54 sites integrated / 100K+ monthly processing</li>
+                  </ul>
+                </div>
+
+                <div className="project-links">
+                  <a
+                    href="https://github.com/rancorder/master_controller"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="project-link"
                   >
-                    <div className="project-head">
-                      <h3 className="project-title">{p.title}</h3>
-                      <span className="badge">{p.category}</span>
-                    </div>
+                    GitHub →
+                  </a>
+                </div>
 
-                    <p className="project-desc">{p.description}</p>
+                <div className="tags">
+                  <span className="tag">Python</span>
+                  <span className="tag">SQLite(WAL)</span>
+                  <span className="tag">24/7 Operations</span>
+                </div>
+              </motion.article>
 
-                    {p.pmDecisions && p.pmDecisions.length > 0 ? (
-                      <div className="pm-box">
-                        <div className="pm-title">Decision Design</div>
-                        <ul className="pm-list">
-                          {p.pmDecisions.map((d, idx) => (
-                            <li key={idx}>{d}</li>
-                          ))}
-                        </ul>
-                      </div>
-                    ) : null}
+              {/* Case 3: Multi-stakeholder */}
+              <motion.article
+                className="card"
+                variants={fadeUp}
+                whileHover={{
+                  y: -8,
+                  boxShadow: '0 24px 60px rgba(0, 0, 0, 0.5)',
+                }}
+                transition={{ duration: 0.3 }}
+              >
+                <div className="project-head">
+                  <h3 className="project-title">Multi-stakeholder Product Specification PM</h3>
+                  <span className="badge">enterprise</span>
+                </div>
 
-                    <div className="two-col">
-                      <div>
-                        <div className="mini-title">Production Result</div>
-                        <ul className="list">
-                          {p.highlights.map((h, idx) => (
-                            <li key={idx}>{h}</li>
-                          ))}
-                        </ul>
-                      </div>
-                      <div>
-                        <div className="mini-title">Tech</div>
-                        <div className="tags">
-                          {p.technologies.map((t) => (
-                            <span className="tag" key={t}>
-                              {t}
-                            </span>
-                          ))}
-                        </div>
-                        {p.links && (
-                          <div className="project-links">
-                            {p.links.github && (
-                              <a
-                                href={p.links.github}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="project-link"
-                              >
-                                GitHub →
-                              </a>
-                            )}
-                            {p.links.demo && (
-                              <a
-                                href={p.links.demo}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="project-link"
-                              >
-                                Demo →
-                              </a>
-                            )}
-                            {p.links.article && (
-                              <a
-                                href={p.links.article}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="project-link"
-                              >
-                                Article →
-                              </a>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </motion.article>
-                ))}
-              </motion.div>
-            </AnimatePresence>
+                <div className="case-block">
+                  <div className="case-label">Problem</div>
+                  <p className="case-text">
+                    Home appliance product specification deadlocked by competing department priorities. Ambiguous
+                    requirements generating costly design changes and timeline slippage.
+                  </p>
+                </div>
+
+                <div className="case-block">
+                  <div className="case-label">Action</div>
+                  <p className="case-text">
+                    Classified requirements into "Decide Now" vs "Defer Later" to eliminate wasteful debate. Established
+                    3-tier change impact evaluation (Minor/Moderate/Critical) with clear acceptance criteria.
+                  </p>
+                </div>
+
+                <div className="case-block">
+                  <div className="case-label">Result</div>
+                  <ul className="list">
+                    <li>Zero specification-related delays for 14 months</li>
+                    <li>60% reduction in design change costs</li>
+                    <li>85%+ stakeholder satisfaction maintained quarterly</li>
+                  </ul>
+                </div>
+
+                <div className="tags">
+                  <span className="tag">Specification Definition</span>
+                  <span className="tag">Consensus Building</span>
+                  <span className="tag">Change Management</span>
+                </div>
+              </motion.article>
+            </motion.div>
           </motion.div>
         </div>
       </section>
 
-      {/* Skills - "Used for" 形式 */}
+      {/* Skills - 役割ベース */}
       <section id="skills" className="section">
         <div className="container">
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.2 }} variants={stagger}>
@@ -370,29 +376,66 @@ export default function Page() {
               Skills
             </motion.h2>
             <motion.p className="section-sub" variants={fadeUp}>
-              Not "what I can do" but "how I use them to solve problems"
+              Role-based capabilities, not tool lists
             </motion.p>
 
             <motion.div className="grid skills" variants={stagger}>
-              {skills.map((g) => (
-                <motion.div
-                  key={g.category}
-                  className="card"
-                  variants={fadeUp}
-                  whileHover={{
-                    y: -6,
-                    boxShadow: '0 20px 60px rgba(0, 0, 0, 0.4)',
-                  }}
-                  transition={{ duration: 0.3 }}
-                >
-                  <div className="mini-title">{g.category}</div>
-                  <ul className="list">
-                    {g.items.map((it) => (
-                      <li key={it}>{it}</li>
-                    ))}
-                  </ul>
-                </motion.div>
-              ))}
+              {/* Project & Decision Design */}
+              <motion.div
+                className="card"
+                variants={fadeUp}
+                whileHover={{
+                  y: -6,
+                  boxShadow: '0 20px 60px rgba(0, 0, 0, 0.4)',
+                }}
+                transition={{ duration: 0.3 }}
+              >
+                <div className="mini-title">Project & Decision Design</div>
+                <ul className="list">
+                  <li>Clarifying ambiguous requirements</li>
+                  <li>Designing decision authority and ownership</li>
+                  <li>Cross-functional stakeholder alignment</li>
+                  <li>Trade-off design (Speed × Quality × Cost)</li>
+                </ul>
+              </motion.div>
+
+              {/* Operational & Technical Context */}
+              <motion.div
+                className="card"
+                variants={fadeUp}
+                whileHover={{
+                  y: -6,
+                  boxShadow: '0 20px 60px rgba(0, 0, 0, 0.4)',
+                }}
+                transition={{ duration: 0.3 }}
+              >
+                <div className="mini-title">Operational & Technical Context</div>
+                <ul className="list">
+                  <li>Long-running automation systems (11+ months continuous operation)</li>
+                  <li>Monitoring, failure isolation, circuit breakers</li>
+                  <li>Production-focused design reviews</li>
+                  <li>Manufacturing precision (0.01mm) × Technology speed (24/7)</li>
+                </ul>
+              </motion.div>
+
+              {/* Tools */}
+              <motion.div
+                className="card"
+                variants={fadeUp}
+                whileHover={{
+                  y: -6,
+                  boxShadow: '0 20px 60px rgba(0, 0, 0, 0.4)',
+                }}
+                transition={{ duration: 0.3 }}
+              >
+                <div className="mini-title">Tools</div>
+                <ul className="list">
+                  <li>Python, FastAPI, React, TypeScript, Next.js</li>
+                  <li>Docker, Linux, PostgreSQL, Redis, SQLite</li>
+                  <li>pytest, k6, Prometheus, Grafana</li>
+                  <li>Azure, Git, Azure DevOps</li>
+                </ul>
+              </motion.div>
             </motion.div>
           </motion.div>
         </div>
@@ -583,6 +626,14 @@ export default function Page() {
           -webkit-background-clip: text;
           -webkit-text-fill-color: transparent;
           background-clip: text;
+        }
+
+        .hero-subtitle {
+          margin: 20px 0 0;
+          font-size: 14px;
+          color: var(--muted2);
+          line-height: 1.6;
+          font-style: italic;
         }
 
         .hero-sub {
@@ -964,6 +1015,26 @@ export default function Page() {
 
         .pm-list li:last-child {
           margin-bottom: 0;
+        }
+
+        .case-block {
+          margin-top: 20px;
+        }
+
+        .case-label {
+          font-weight: 900;
+          font-size: 11px;
+          color: var(--accent);
+          text-transform: uppercase;
+          letter-spacing: 0.8px;
+          margin-bottom: 8px;
+        }
+
+        .case-text {
+          margin: 0;
+          color: var(--muted);
+          line-height: 1.75;
+          font-size: 13px;
         }
 
         .two-col {
