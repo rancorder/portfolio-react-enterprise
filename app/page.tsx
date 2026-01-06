@@ -318,6 +318,40 @@ export default function Page() {
                             </span>
                           ))}
                         </div>
+                        {p.links && (
+                          <div className="project-links">
+                            {p.links.github && (
+                              <a
+                                href={p.links.github}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="project-link"
+                              >
+                                GitHub →
+                              </a>
+                            )}
+                            {p.links.demo && (
+                              <a
+                                href={p.links.demo}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="project-link"
+                              >
+                                Demo →
+                              </a>
+                            )}
+                            {p.links.article && (
+                              <a
+                                href={p.links.article}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="project-link"
+                              >
+                                Article →
+                              </a>
+                            )}
+                          </div>
+                        )}
                       </div>
                     </div>
                   </motion.article>
@@ -981,6 +1015,27 @@ export default function Page() {
         .tag:hover {
           background: rgba(255, 255, 255, 0.06);
           border-color: rgba(255, 255, 255, 0.18);
+        }
+
+        .project-links {
+          margin-top: 16px;
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+        }
+
+        .project-link {
+          font-size: 13px;
+          color: var(--accent);
+          font-weight: 700;
+          transition: all 0.2s ease;
+          display: inline-flex;
+          align-items: center;
+        }
+
+        .project-link:hover {
+          color: var(--accent2);
+          transform: translateX(4px);
         }
 
         .grid.skills {
