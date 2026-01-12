@@ -1,3 +1,4 @@
+// app/blog/page.tsx
 import { getAllPosts } from '@/lib/mdx';
 import { fetchAllExternalArticles } from '@/lib/external-articles';
 import Link from 'next/link';
@@ -6,85 +7,69 @@ import styles from './blog.module.css';
 // 1時間ごとにISRで再生成
 export const revalidate = 3600;
 
-export const metadata = {
-  title: 'Blog | Technical Insights & Project Learnings',
-  description: 'In-depth articles on enterprise PM, automation, SRE, and production-grade system design.',
-};
-
-export default async function BlogPage() {
-  const internalPosts = getAllPosts();
+export default function BlogPage() {
+  // 内部記事（MDXファイル）
+  const posts = getAllPosts();
+  
+  // 外部記事（キャッシュから読み込み）
   const externalArticles = fetchAllExternalArticles();
 
   return (
     <div className={styles.blogPage}>
-      {/* ヘッダー */}
-      <header className={styles.blogHeader}>
-        <div className={styles.container}>
+      <div className={styles.container}>
+        {/* ヘッダー */}
+        <header className={styles.header}>
           <Link href="/" className={styles.backLink}>
-            ← Back to Portfolio
+            ← Back to Home
           </Link>
-          <h1 className={styles.blogTitle}>Technical Insights</h1>
-          <p className={styles.blogSubtitle}>
-            Deep dives into enterprise PM, decision design, automation, and production-grade systems
+          <h1 className={styles.title}>Technical Blog</h1>
+          <p className={styles.subtitle}>
+            Deep dives into enterprise PM, decision design, and production-grade systems
           </p>
-        </div>
-      </header>
+        </header>
 
-      <div className={`${styles.container} ${styles.blogContainer}`}>
-        {/* 内部記事（MDX） - Featured Articles */}
-        <section className={styles.featuredSection}>
-          <h2 className={styles.sectionTitle}>
-            <span className={styles.titleIcon}>📝</span>
-            Featured Articles
-          </h2>
-          
-          {internalPosts.length === 0 ? (
-            <div className={styles.emptyState}>
-              <p>Coming soon: comprehensive guides on enterprise PM and production operations</p>
-            </div>
-          ) : (
-            <div className={styles.featuredGrid}>
-              {internalPosts.map(post => (
-                <Link 
-                  key={post.slug} 
-                  href={`/blog/${post.slug}`}
-                  className={styles.featuredCard}
-                >
-                  <div className={styles.cardMeta}>
-                    <span className={styles.cardDate}>
-                      {new Date(post.date).toLocaleDateString('en-US', { 
-                        year: 'numeric', 
-                        month: 'short', 
-                        day: 'numeric' 
-                      })}
-                    </span>
-                    <span className={styles.cardReadingTime}>{post.readingTime}</span>
-                  </div>
-                  
-                  <h3 className={styles.cardTitle}>{post.title}</h3>
-                  <p className={styles.cardExcerpt}>{post.excerpt}</p>
-                  
-                  <div className={styles.cardCategory}>{post.category}</div>
-                  
-                  <div className={styles.cardCta}>
-                    Read full article →
-                  </div>
-                </Link>
-              ))}
-            </div>
-          )}
+        {/* Featured Articles（内部記事） */}
+        <section className={styles.section}>
+          <h2 className={styles.sectionTitle}>Featured Articles</h2>
+          <div className={styles.grid}>
+            {posts.map((post) => (
+              <Link
+                key={post.slug}
+                href={`/blog/${post.slug}`}
+                className={styles.featuredCard}
+              >
+                <div className={styles.cardMeta}>
+                  <span className={styles.category}>{post.category}</span>
+                  <span className={styles.date}>
+                    {new Date(post.date).toLocaleDateString('en-US', {
+                      year: 'numeric',
+                      month: 'short',
+                      day: 'numeric',
+                    })}
+                  </span>
+                </div>
+                <h3 className={styles.cardTitle}>{post.title}</h3>
+                <p className={styles.cardExcerpt}>{post.excerpt}</p>
+                <div className={styles.cardFooter}>
+                  <span className={styles.readTime}>{post.readingTime}</span>
+                  <span className={styles.arrow}>→</span>
+                </div>
+              </Link>
+            ))}
+          </div>
         </section>
 
-        {/* 外部記事（Qiita/Zenn/note） - Latest from External Platforms */}
+        {/* External Articles（Qiita/Zenn） */}
         {externalArticles.length > 0 && (
-          <section className={styles.externalSection}>
-            <h2 className={styles.sectionTitle}>
-              <span className={styles.titleIcon}>🔗</span>
-              Latest from Qiita & Zenn
-            </h2>
-            
+          <section className={styles.section}>
+            <div className={styles.externalHeader}>
+              <h2 className={styles.sectionTitle}>Latest from Qiita & Zenn</h2>
+              <p className={styles.externalSubtitle}>
+                Recent articles published on external platforms
+              </p>
+            </div>
             <div className={styles.externalGrid}>
-              {externalArticles.map((article, idx) => (
+              {externalArticles.slice(0, 6).map((article, idx) => (
                 <a
                   key={idx}
                   href={article.link}
@@ -92,25 +77,26 @@ export default async function BlogPage() {
                   rel="noopener noreferrer nofollow"
                   className={styles.externalCard}
                 >
-                  <div className={styles.externalHeader}>
+                  <div className={styles.externalCardHeader}>
                     <span className={`${styles.platformBadge} ${styles[`platform${article.source}`]}`}>
                       {article.source}
                     </span>
-                   
                     <span className={styles.externalDate}>
-                      {new Date(article.publishedDate).toLocaleDateString('en-US', { 
-                        year: 'numeric', 
-                        month: 'short', 
-                        day: 'numeric' 
+                      {new Date(article.date).toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric',
                       })}
                     </span>
                   </div>
-                  
                   <h3 className={styles.externalTitle}>{article.title}</h3>
-                  <p className={styles.externalSummary}>{article.summary}</p>
-                  
-                  <div className={styles.externalCta}>
-                    Read on {article.platform} →
+                  {article.excerpt && (
+                    <p className={styles.externalExcerpt}>{article.excerpt}</p>
+                  )}
+                  <div className={styles.externalFooter}>
+                    <span className={styles.externalLink}>
+                      Read on {article.source} →
+                    </span>
                   </div>
                 </a>
               ))}
