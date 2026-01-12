@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { motion, useScroll, useTransform, useSpring, useInView } from 'framer-motion';
+import BlogSectionJa from '../components/BlogSectionJa';
 
 const fadeUp = {
   hidden: { opacity: 0, y: 24 },
@@ -70,6 +71,7 @@ export default function PageJa() {
             <a href="#role">役割定義</a>
             <a href="#projects">実績</a>
             <a href="#skills">スキル</a>
+            <a href="/blog">ブログ</a>
             <a href="#contact" className="pill">
               Contact
             </a>
@@ -477,6 +479,9 @@ export default function PageJa() {
           </motion.div>
         </div>
       </section>
+
+      {/* Blog Section - 最新の技術記事 */}
+      <BlogSectionJa />
 
       {/* Contact - 日本語CTA */}
       <section id="contact" className="section">
