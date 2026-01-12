@@ -93,9 +93,10 @@ export default async function BlogPage() {
                   className={styles.externalCard}
                 >
                   <div className={styles.externalHeader}>
-                    <span className={`${styles.platformBadge} ${styles[`platform${article.platform}`]}`}>
-                      {article.platform}
+                    <span className={`${styles.platformBadge} ${styles[`platform${article.source}`]}`}>
+                      {article.source}
                     </span>
+                   
                     <span className={styles.externalDate}>
                       {new Date(article.publishedDate).toLocaleDateString('en-US', { 
                         year: 'numeric', 
