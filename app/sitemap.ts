@@ -1,6 +1,7 @@
 // app/sitemap.ts
 import { MetadataRoute } from 'next';
 import { getAllPosts } from '@/lib/mdx';
+import { fetchAllExternalArticles } from '@/lib/external-articles';
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const baseUrl = 'https://rancorder.vercel.app';
@@ -9,9 +10,20 @@ export default function sitemap(): MetadataRoute.Sitemap {
   let posts: any[] = [];
   try {
     posts = getAllPosts();
+    console.log(`[Sitemap] Found ${posts.length} internal posts`);
   } catch (error) {
-    console.error('Failed to get posts:', error);
+    console.error('[Sitemap] Failed to get posts:', error);
     posts = [];
+  }
+
+  // 外部記事（キャッシュから）
+  let externalArticles: any[] = [];
+  try {
+    externalArticles = fetchAllExternalArticles();
+    console.log(`[Sitemap] Found ${externalArticles.length} external articles from cache`);
+  } catch (error) {
+    console.error('[Sitemap] Failed to get external articles:', error);
+    externalArticles = [];
   }
 
   // 静的ページ
@@ -44,5 +56,17 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.7,
   }));
 
-  return [...staticPages, ...postPages];
+  // 外部記事
+  const externalPages: MetadataRoute.Sitemap = externalArticles.map((article) => ({
+    url: article.link,
+    lastModified: new Date(article.date),
+    changeFrequency: 'monthly' as const,
+    priority: 0.6,
+  }));
+
+  const allPages = [...staticPages, ...postPages, ...externalPages];
+  
+  console.log(`[Sitemap] Generated sitemap with ${allPages.length} total pages`);
+  
+  return allPages;
 }
