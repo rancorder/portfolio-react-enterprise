@@ -1,8 +1,23 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  reactStrictMode: true,
-  compress: true,
-  poweredByHeader: false,
+  pageExtensions: ['js', 'jsx', 'ts', 'tsx', 'md', 'mdx'],
+  experimental: {
+    mdxRs: true,
+  },
+  // 外部画像許可（Qiita/Zennのサムネイル用）
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'qiita-user-contents.imgix.net',
+      },
+      {
+        protocol: 'https',
+        hostname: 'res.cloudinary.com',
+      },
+    ],
+  },
 }
 
-module.exports = nextConfig
+const withMDX = require('@next/mdx')()
+module.exports = withMDX(nextConfig)
