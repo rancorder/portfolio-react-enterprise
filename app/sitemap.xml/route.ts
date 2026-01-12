@@ -1,19 +1,15 @@
 // app/sitemap.xml/route.ts
 import { getAllPosts } from '@/lib/mdx';
-import { fetchAllExternalArticles } from '@/lib/external-articles';
 
 export async function GET() {
-  const baseUrl = 'https://rancorder.vercel.app'; // ← あなたのドメインに変更
+  const baseUrl = 'https://rancorder.vercel.app';
   
   // 内部ブログ記事
-  const posts = getAllPosts();
-  
-  // 外部記事
-  let externalArticles: any[] = [];
+  let posts: any[] = [];
   try {
-    externalArticles = await fetchAllExternalArticles();
+    posts = getAllPosts();
   } catch (error) {
-    console.error('Failed to fetch external articles for sitemap:', error);
+    console.error('Failed to get posts for sitemap:', error);
   }
 
   // 静的ページ
@@ -45,17 +41,6 @@ export async function GET() {
     <lastmod>${new Date(post.date).toISOString()}</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
-  </url>`
-    )
-    .join('')}
-  ${externalArticles
-    .map(
-      (article) => `
-  <url>
-    <loc>${article.link}</loc>
-    <lastmod>${new Date(article.date).toISOString()}</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.5</priority>
   </url>`
     )
     .join('')}
