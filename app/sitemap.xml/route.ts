@@ -2,36 +2,33 @@
 import { getAllPosts } from '@/lib/mdx';
 import { fetchAllExternalArticles } from '@/lib/external-articles';
 
+// 完全に動的レンダリング（ビルド時に生成しない）
+export const dynamic = 'force-dynamic';
+export const revalidate = 0; // キャッシュしない（テスト用）
+
 export async function GET() {
   const baseUrl = 'https://rancorder.vercel.app';
+  
+  console.log('[Sitemap] Starting sitemap generation...');
   
   // 内部ブログ記事
   let posts: any[] = [];
   try {
     posts = getAllPosts();
+    console.log(`[Sitemap] Found ${posts.length} internal posts`);
   } catch (error) {
-    console.error('Failed to get posts for sitemap:', error);
+    console.error('[Sitemap] Failed to get posts:', error);
     posts = [];
   }
 
-  // 外部記事（Qiita/Zenn）- タイムアウト付き
+  // 外部記事（Qiita/Zenn）
   let externalArticles: any[] = [];
   try {
-    // 10秒でタイムアウト
-    const timeoutPromise = new Promise((_, reject) => 
-      setTimeout(() => reject(new Error('Timeout')), 10000)
-    );
-    
-    const fetchPromise = fetchAllExternalArticles();
-    
-    externalArticles = await Promise.race([
-      fetchPromise,
-      timeoutPromise
-    ]) as any[];
-    
-    console.log(`Successfully fetched ${externalArticles.length} external articles for sitemap`);
+    console.log('[Sitemap] Fetching external articles...');
+    externalArticles = await fetchAllExternalArticles();
+    console.log(`[Sitemap] Found ${externalArticles.length} external articles`);
   } catch (error) {
-    console.error('Failed to fetch external articles for sitemap (continuing without them):', error);
+    console.error('[Sitemap] Failed to fetch external articles:', error);
     externalArticles = [];
   }
 
@@ -79,7 +76,7 @@ export async function GET() {
     <priority>0.6</priority>
   </url>`;
         } catch (error) {
-          console.error('Error formatting external article:', error);
+          console.error('[Sitemap] Error formatting external article:', error);
           return '';
         }
       }
@@ -87,16 +84,12 @@ export async function GET() {
     .join('')}
 </urlset>`;
 
+  console.log(`[Sitemap] Generated sitemap with ${staticPages.length} static pages, ${posts.length} posts, ${externalArticles.length} external articles`);
+
   return new Response(sitemap, {
     headers: {
       'Content-Type': 'application/xml',
-      'Cache-Control': 'public, max-age=3600, s-maxage=3600',
+      'Cache-Control': 'no-cache', // テスト用：キャッシュなし
     },
   });
 }
-
-// ISR: 1時間ごとに再生成
-export const revalidate = 3600;
-
-// 動的レンダリング（外部API呼び出しのため）
-export const dynamic = 'force-dynamic';
