@@ -1,5 +1,6 @@
 // app/sitemap.xml/route.ts
 import { getAllPosts } from '@/lib/mdx';
+import { fetchAllExternalArticles } from '@/lib/external-articles';
 
 export async function GET() {
   const baseUrl = 'https://rancorder.vercel.app';
@@ -10,6 +11,28 @@ export async function GET() {
     posts = getAllPosts();
   } catch (error) {
     console.error('Failed to get posts for sitemap:', error);
+    posts = [];
+  }
+
+  // 外部記事（Qiita/Zenn）- タイムアウト付き
+  let externalArticles: any[] = [];
+  try {
+    // 10秒でタイムアウト
+    const timeoutPromise = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error('Timeout')), 10000)
+    );
+    
+    const fetchPromise = fetchAllExternalArticles();
+    
+    externalArticles = await Promise.race([
+      fetchPromise,
+      timeoutPromise
+    ]) as any[];
+    
+    console.log(`Successfully fetched ${externalArticles.length} external articles for sitemap`);
+  } catch (error) {
+    console.error('Failed to fetch external articles for sitemap (continuing without them):', error);
+    externalArticles = [];
   }
 
   // 静的ページ
@@ -44,6 +67,24 @@ export async function GET() {
   </url>`
     )
     .join('')}
+  ${externalArticles
+    .map(
+      (article) => {
+        try {
+          return `
+  <url>
+    <loc>${article.link}</loc>
+    <lastmod>${new Date(article.date).toISOString()}</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>`;
+        } catch (error) {
+          console.error('Error formatting external article:', error);
+          return '';
+        }
+      }
+    )
+    .join('')}
 </urlset>`;
 
   return new Response(sitemap, {
@@ -56,3 +97,6 @@ export async function GET() {
 
 // ISR: 1時間ごとに再生成
 export const revalidate = 3600;
+
+// 動的レンダリング（外部API呼び出しのため）
+export const dynamic = 'force-dynamic';
