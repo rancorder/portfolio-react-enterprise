@@ -1,5 +1,20 @@
 // data/projects.ts - EY想定版（代表3ケース + Additional）
-import { Project } from '@/types';
+
+// ✅ 型定義をファイル内に追加
+export interface Project {
+  id: string;
+  title: string;
+  description: string;
+  category: string;
+  technologies: string[];
+  highlights: string[];
+  pmDecisions?: string[];
+  links?: {
+    github?: string;
+    demo?: string;
+    article?: string;
+  };
+}
 
 export const projects: Project[] = [
   // ========================================
