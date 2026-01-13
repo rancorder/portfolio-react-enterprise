@@ -24,6 +24,21 @@ interface EmailResponse {
 }
 
 /**
+ * GET /api/send-download-link
+ * ヘルスチェック用エンドポイント
+ */
+export async function GET(request: NextRequest): Promise<NextResponse> {
+  return NextResponse.json(
+    {
+      status: 'ok',
+      message: 'Email Download Link API is running',
+      service: 'Resend',
+    },
+    { status: 200 }
+  );
+}
+
+/**
  * POST /api/send-download-link
  * ダウンロードリンクをメールで送信
  */
