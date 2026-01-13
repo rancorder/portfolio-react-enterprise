@@ -37,30 +37,63 @@ function fetchJSON(url) {
 }
 
 /**
- * テキストから見出しを抽出（最初の文または最初の見出し）
+ * Markdownテキストをクリーニング
+ */
+function cleanMarkdown(text) {
+  if (!text) return '';
+  
+  return text
+    .replace(/```[\s\S]*?```/g, '')    // コードブロック削除
+    .replace(/`[^`\n]+`/g, '')         // インラインコード削除
+    .replace(/!\[.*?\]\(.*?\)/g, '')   // 画像削除
+    .replace(/\[([^\]]+)\]\([^\)]+\)/g, '$1') // リンクをテキストに
+    .replace(/^#{1,6}\s+/gm, '')       // 見出し記号削除
+    .replace(/^[\*\-\+]\s+/gm, '')     // 箇条書き記号削除
+    .replace(/^>\s+/gm, '')            // 引用記号削除
+    .replace(/[*_~]{1,2}([^*_~]+)[*_~]{1,2}/g, '$1') // 強調記号削除
+    .replace(/\n{2,}/g, '\n')          // 複数改行を1つに
+    .replace(/\n/g, ' ')               // 改行をスペースに
+    .replace(/\s+/g, ' ')              // 複数スペースを1つに
+    .trim();
+}
+
+/**
+ * テキストから適切な抜粋を抽出
  */
 function extractExcerpt(text, maxLength = 150) {
   if (!text) return '';
   
-  // Markdown記号を削除
-  let cleaned = text
-    .replace(/```[\s\S]*?```/g, '') // コードブロックを削除
-    .replace(/`[^`]+`/g, '')         // インラインコードを削除
-    .replace(/!\[.*?\]\(.*?\)/g, '') // 画像を削除
-    .replace(/\[([^\]]+)\]\([^\)]+\)/g, '$1') // リンクをテキストのみに
-    .replace(/^#+\s+/gm, '')         // 見出し記号を削除
-    .replace(/[*_~]/g, '')           // 強調記号を削除
-    .replace(/\n+/g, ' ')            // 改行をスペースに
-    .trim();
+  const cleaned = cleanMarkdown(text);
+  if (!cleaned) return '';
   
-  // 最初の文を取得（句点まで、または最大文字数）
-  const firstSentence = cleaned.split(/[。．.!?！？]/)[0];
+  // 句読点で分割
+  const sentences = cleaned.split(/[。．.!?！？]/);
+  let excerpt = '';
   
-  if (firstSentence.length > maxLength) {
-    return firstSentence.substring(0, maxLength) + '...';
+  for (const sentence of sentences) {
+    const trimmed = sentence.trim();
+    if (!trimmed) continue;
+    
+    if (excerpt.length === 0) {
+      excerpt = trimmed;
+    } else if (excerpt.length + trimmed.length + 1 < maxLength) {
+      excerpt += '。' + trimmed;
+    } else {
+      break;
+    }
   }
   
-  return firstSentence + '...';
+  // 短すぎる場合は先頭N文字
+  if (excerpt.length < 50 && cleaned.length > 50) {
+    excerpt = cleaned.substring(0, maxLength);
+  }
+  
+  // 末尾処理
+  if (excerpt && !excerpt.match(/[。．.!?！？]$/)) {
+    excerpt += '...';
+  }
+  
+  return excerpt;
 }
 
 /**
@@ -73,17 +106,22 @@ async function fetchQiitaArticles(username) {
     const data = await fetchJSON(url);
     
     const articles = data.map(item => {
-      // bodyから適切な抜粋を作成
-      const excerpt = extractExcerpt(item.body, 150);
+      let excerpt = '';
+      
+      if (item.body) {
+        excerpt = extractExcerpt(item.body, 150);
+      }
+      
+      if (!excerpt || excerpt.length < 30) {
+        excerpt = `${item.title}についての技術記事です。`;
+      }
       
       return {
         title: item.title,
         link: item.url,
         date: item.created_at,
         source: 'Qiita',
-        excerpt: excerpt || 'Qiitaで公開された技術記事です。',
-        tags: (item.tags || []).slice(0, 3).map(t => t.name).join(', '),
-        likes: item.likes_count || 0,
+        excerpt: excerpt,
       };
     });
     
@@ -96,15 +134,16 @@ async function fetchQiitaArticles(username) {
 }
 
 /**
- * 個別のZenn記事の詳細を取得
+ * Zenn記事の詳細を取得（スラッグからユーザー名を除去）
  */
-async function fetchZennArticleDetail(username, slug) {
+async function fetchZennArticleDetail(slug) {
   try {
-    const url = `https://zenn.dev/api/articles/${username}/${slug}`;
+    // スラッグから記事IDのみを抽出（ユーザー名が含まれている場合）
+    const articleId = slug.split('/').pop();
+    const url = `https://zenn.dev/api/articles/${articleId}`;
     const data = await fetchJSON(url);
     return data.article;
   } catch (error) {
-    console.warn(`  ⚠️  Failed to fetch detail for ${slug}`);
     return null;
   }
 }
@@ -119,37 +158,58 @@ async function fetchZennArticles(username) {
     const data = await fetchJSON(url);
     
     const articleList = (data.articles || []).slice(0, 20);
+    console.log(`   Found ${articleList.length} articles, fetching details...`);
     
-    // 各記事の詳細を取得（並行処理で高速化）
-    console.log(`   Fetching details for ${articleList.length} articles...`);
-    const articlesWithDetails = await Promise.all(
-      articleList.map(async (item) => {
-        // 詳細取得を試みる（失敗してもスキップ）
-        const detail = await fetchZennArticleDetail(username, item.slug);
-        
-        // 抜粋を作成
-        let excerpt = '';
-        if (detail && detail.body_markdown) {
-          excerpt = extractExcerpt(detail.body_markdown, 150);
-        } else if (item.body_letters_count) {
-          excerpt = `${item.emoji || '📝'} この記事は約${item.body_letters_count}文字の技術記事です。`;
-        } else {
-          excerpt = `${item.emoji || '📝'} Zennで公開された技術記事です。`;
-        }
-        
-        return {
-          title: item.title,
-          link: `https://zenn.dev${item.path}`,
-          date: item.published_at || item.created_at,
-          source: 'Zenn',
-          excerpt: excerpt,
-          emoji: item.emoji || '📝',
-          likes: item.liked_count || 0,
-        };
-      })
-    );
+    const articlesWithDetails = [];
     
-    console.log(`✅ Fetched ${articlesWithDetails.length} Zenn articles`);
+    // 5記事ずつバッチ処理
+    for (let i = 0; i < articleList.length; i += 5) {
+      const batch = articleList.slice(i, i + 5);
+      
+      const batchResults = await Promise.all(
+        batch.map(async (item) => {
+          let excerpt = '';
+          
+          // 詳細を取得して本文から抜粋を作成
+          const detail = await fetchZennArticleDetail(item.slug);
+          
+          if (detail && detail.body_markdown) {
+            excerpt = extractExcerpt(detail.body_markdown, 150);
+            console.log(`   ✓ ${item.title.substring(0, 40)}... - Got excerpt (${excerpt.length} chars)`);
+          }
+          
+          // フォールバック
+          if (!excerpt || excerpt.length < 30) {
+            if (detail && detail.body_markdown) {
+              // 本文はあるが短い場合
+              const firstPara = detail.body_markdown.split('\n\n')[0];
+              excerpt = cleanMarkdown(firstPara).substring(0, 150) + '...';
+            } else {
+              // 本文が取得できない場合
+              excerpt = `${item.emoji || '📝'} ${item.title}についての技術記事です。`;
+            }
+            console.log(`   ⚠ ${item.title.substring(0, 40)}... - Using fallback`);
+          }
+          
+          return {
+            title: item.title,
+            link: `https://zenn.dev${item.path}`,
+            date: item.published_at || item.created_at,
+            source: 'Zenn',
+            excerpt: excerpt,
+          };
+        })
+      );
+      
+      articlesWithDetails.push(...batchResults);
+      
+      // API制限対策
+      if (i + 5 < articleList.length) {
+        await new Promise(resolve => setTimeout(resolve, 200));
+      }
+    }
+    
+    console.log(`✅ Fetched ${articlesWithDetails.length} Zenn articles with excerpts`);
     return articlesWithDetails;
   } catch (error) {
     console.error('❌ Failed to fetch Zenn articles:', error.message);
@@ -166,13 +226,11 @@ async function main() {
   const qiitaUsername = 'rancorder';
   const zennUsername = 'supermassu';
   
-  // 並行取得
   const [qiitaArticles, zennArticles] = await Promise.all([
     fetchQiitaArticles(qiitaUsername),
     fetchZennArticles(zennUsername),
   ]);
   
-  // 統合して日付順にソート
   const allArticles = [...qiitaArticles, ...zennArticles]
     .sort((a, b) => new Date(b.date) - new Date(a.date));
   
@@ -181,37 +239,25 @@ async function main() {
   console.log(`   Zenn:  ${zennArticles.length} articles`);
   console.log(`   Total: ${allArticles.length} articles\n`);
   
-  // JSONファイルに保存
   const outputPath = path.join(process.cwd(), 'public', 'external-articles.json');
-  
-  // publicディレクトリが存在しない場合は作成
   fs.mkdirSync(path.dirname(outputPath), { recursive: true });
-  
-  // ファイルに書き込み
   fs.writeFileSync(outputPath, JSON.stringify(allArticles, null, 2), 'utf-8');
   
   console.log(`💾 Saved to: ${outputPath}`);
-  console.log(`✨ Done!\n`);
   
-  // 0件の場合は警告
-  if (allArticles.length === 0) {
-    console.warn('⚠️  Warning: No articles were fetched. Please check:');
-    console.warn('   - Username is correct');
-    console.warn('   - Network connection');
-    console.warn('   - API availability');
-  }
-  
-  // サンプル表示（デバッグ用）
+  // サンプル表示
   if (allArticles.length > 0) {
-    console.log('\n📝 Sample article:');
-    const sample = allArticles[0];
-    console.log(`   Title: ${sample.title}`);
-    console.log(`   Excerpt: ${sample.excerpt.substring(0, 80)}...`);
-    console.log(`   Source: ${sample.source}`);
+    console.log('\n📝 Sample excerpts:\n');
+    allArticles.slice(0, 3).forEach((article, idx) => {
+      console.log(`${idx + 1}. [${article.source}] ${article.title.substring(0, 50)}...`);
+      console.log(`   ${article.excerpt.substring(0, 100)}...`);
+      console.log('');
+    });
   }
+  
+  console.log('✨ Done!\n');
 }
 
-// 実行
 main().catch(error => {
   console.error('\n❌ Fatal error:', error);
   process.exit(1);
