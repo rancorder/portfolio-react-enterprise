@@ -1,12 +1,13 @@
 /**
  * Vercel Serverless Function - Send Download Link via Email
  * Next.js 13+ App Router API Route
+ * Using Resend for email delivery
  */
 import { NextRequest, NextResponse } from 'next/server';
-import sgMail from '@sendgrid/mail';
+import { Resend } from 'resend';
 
-// SendGrid API Key設定
-sgMail.setApiKey(process.env.SENDGRID_API_KEY!);
+// Resend API Key設定
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 // リクエストボディの型定義
 interface EmailRequestBody {
@@ -28,6 +29,18 @@ interface EmailResponse {
  */
 export async function POST(request: NextRequest): Promise<NextResponse<EmailResponse>> {
   try {
+    // 環境変数確認
+    if (!process.env.RESEND_API_KEY) {
+      console.error('[ERROR] RESEND_API_KEY is not set');
+      return NextResponse.json(
+        {
+          success: false,
+          message: 'Email service not configured',
+        },
+        { status: 500 }
+      );
+    }
+
     // リクエストボディ取得
     const body: EmailRequestBody = await request.json();
     const { email, download_url, file_name } = body;
@@ -184,34 +197,20 @@ export async function POST(request: NextRequest): Promise<NextResponse<EmailResp
       </html>
     `;
 
-    // プレーンテキストバージョン
-    const textContent = `
-Your Download Link
-
-Hello,
-
-Thank you for your request. Your download link for ${fileDisplayName} is ready:
-
-${download_url}
-
-If you have any questions, please don't hesitate to contact us.
-
-© ${new Date().getFullYear()} Your Portfolio. All rights reserved.
-    `;
-
-    // SendGridメール送信
-    const msg = {
+    // Resendメール送信
+    const { data, error } = await resend.emails.send({
+      from: 'Download Link <onboarding@resend.dev>',
       to: email,
-      from: process.env.SENDER_EMAIL!,
       subject: `Your Download Link - ${fileDisplayName}`,
-      text: textContent,
       html: htmlContent,
-    };
+    });
 
-    await sgMail.send(msg);
+    if (error) {
+      throw new Error(error.message);
+    }
 
     // ログ出力（Vercelログで確認可能）
-    console.log(`[SUCCESS] Email sent to: ${email} | File: ${fileDisplayName}`);
+    console.log(`[SUCCESS] Email sent to: ${email} | File: ${fileDisplayName} | ID: ${data?.id}`);
 
     return NextResponse.json(
       {
@@ -226,8 +225,7 @@ If you have any questions, please don't hesitate to contact us.
     // エラーログ
     console.error('[ERROR] Failed to send email:', {
       error: error.message,
-      code: error.code,
-      response: error.response?.body,
+      name: error.name,
     });
 
     return NextResponse.json(
