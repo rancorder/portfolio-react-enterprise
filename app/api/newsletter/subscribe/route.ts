@@ -165,17 +165,3 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     service: 'Supabase',
   });
 }
-
-/**
- * GET /api/newsletter/subscribe
- * ヘルスチェック
- */
-export async function GET(request: NextRequest): Promise<NextResponse> {
-  return NextResponse.json({
-    status: 'ok',
-    message: 'Newsletter subscription API is running',
-    service: 'Supabase',
-  });
-}
-
-// Trigger rebuild
