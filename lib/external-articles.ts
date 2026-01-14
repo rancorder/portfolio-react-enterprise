@@ -20,25 +20,39 @@ export interface ExternalArticle {
  */
 export function fetchAllExternalArticles(): ExternalArticle[] {
   try {
-    const filePath = path.join(process.cwd(), 'public', 'external-articles.json');
-    
-    // ファイル存在チェック
-    if (!fs.existsSync(filePath)) {
-      console.warn('⚠️ external-articles.json not found. Run prebuild script first.');
-      return [];
+    // 複数のパスを試行（Vercel環境でも動作するように）
+    const possiblePaths = [
+      path.join(process.cwd(), 'public', 'external-articles.json'),
+      path.join(process.cwd(), '..', 'public', 'external-articles.json'),
+      './public/external-articles.json',
+    ];
+
+    for (const filePath of possiblePaths) {
+      try {
+        if (fs.existsSync(filePath)) {
+          console.log(`✅ Found external-articles.json at: ${filePath}`);
+          const fileContent = fs.readFileSync(filePath, 'utf-8');
+          const articles = JSON.parse(fileContent);
+          
+          // データ検証
+          if (!Array.isArray(articles)) {
+            console.error('❌ Invalid external-articles.json format (not an array)');
+            continue;
+          }
+          
+          console.log(`✅ Loaded ${articles.length} external articles`);
+          return articles;
+        }
+      } catch (err) {
+        // このパスでは失敗、次のパスを試行
+        console.warn(`⚠️ Failed to read from ${filePath}, trying next path...`);
+        continue;
+      }
     }
     
-    const fileContent = fs.readFileSync(filePath, 'utf-8');
-    const articles = JSON.parse(fileContent);
-    
-    // データ検証
-    if (!Array.isArray(articles)) {
-      console.error('❌ Invalid external-articles.json format (not an array)');
-      return [];
-    }
-    
-    console.log(`✅ Loaded ${articles.length} external articles`);
-    return articles;
+    console.warn('⚠️ external-articles.json not found in any location. Run prebuild script first.');
+    console.warn('   Tried paths:', possiblePaths);
+    return [];
     
   } catch (error) {
     if (error instanceof Error) {
